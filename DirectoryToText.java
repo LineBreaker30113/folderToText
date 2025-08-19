@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
@@ -215,34 +217,37 @@ public class DirectoryToText {
 				return;
 			case JFileChooser.APPROVE_OPTION:
 				File selectedDirectory = fc.getSelectedFile();
-				if (selectedDirectory != null && selectedDirectory.isDirectory()) {
-					System.out.println("Selected directory: " + selectedDirectory.getAbsolutePath());
-
-					// Create the root Directory object
-					FileDirectory rootDirectory = new FileDirectory(selectedDirectory);
-
-					// Collect all lines of output
-					DirectoryDataAsTextLineData[] allOutputLines = rootDirectory.toLines();
-
-					// Determine the output file path
-					// Using the directory's absolute path and appending a .txt extension
-					Path outputPath = Paths.get(selectedDirectory.getAbsolutePath() + ".txt");
-
-					try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputPath.toFile()))) {
-						writer.write(getFormattingRules());
-						for (DirectoryDataAsTextLineData data : allOutputLines) {
-							writer.write(data.type.getPrefix() + data.line); // Add prefix and content
-							writer.newLine(); // Write a new line character
-						}
-						System.out.println("Scan complete. Output written to: " + outputPath.toAbsolutePath());
-					} catch (IOException e) {
-						System.err.println("Error writing output file: " + e.getMessage());
-						e.printStackTrace();
-					}
-					JOptionPane.showMessageDialog(null, "Complete!");
-				} else {
+				if (!(selectedDirectory != null && selectedDirectory.isDirectory())) {
 					System.out.println("No valid directory selected.");
 				}
+				System.out.println("Selected directory: " + selectedDirectory.getAbsolutePath());
+
+				// Create the root Directory object
+				FileDirectory rootDirectory = new FileDirectory(selectedDirectory);
+
+				// Collect all lines of output
+				DirectoryDataAsTextLineData[] allOutputLines = rootDirectory.toLines();
+
+				// Determine the operation date
+				LocalDateTime od = LocalDateTime.now();
+				// Create the format. Example: 2024-03-33..10-44
+				DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd..HH-mm");
+				// Determine the output file path
+				// Using the directory's absolute path and appending a .txt extension
+				Path outputPath = Paths.get(selectedDirectory.getAbsolutePath() + " at " + od.format(dateFormat) + ".txt");
+
+				try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputPath.toFile()))) {
+					writer.write(getFormattingRules());
+					for (DirectoryDataAsTextLineData data : allOutputLines) {
+						writer.write(data.type.getPrefix() + data.line); // Add prefix and content
+						writer.newLine(); // Write a new line character
+					}
+					System.out.println("Scan complete. Output written to: " + outputPath.toAbsolutePath());
+				} catch (IOException e) {
+					System.err.println("Error writing output file: " + e.getMessage());
+					e.printStackTrace();
+				}
+				JOptionPane.showMessageDialog(null, "Complete!");
 				break;
 		}
     }
